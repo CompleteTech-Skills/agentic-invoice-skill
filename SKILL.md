@@ -79,6 +79,21 @@ This skill turns verified billing events, line items, contract references, credi
 | Amounts | Line items, taxes, discounts, credits, previous payments, and amount due. |
 | Payment handling | Payment instructions, accounting review status, and collection constraints. |
 
+## Approval Check Before Issuance or Payment Request
+
+Keep generated invoices and payment requests as drafts until the billing/accounting approver explicitly approves them. In an orchestrated engagement, record that approval in `project_state.approvals.billing`, with `status: approved`, `approved_by`, and an ISO `approved_at` date.
+
+When `agentic-services-orchestrator-skill` is installed, run its validator against the engagement's current state for the action about to occur:
+
+```bash
+python3 /absolute/path/to/agentic-services-orchestrator-skill/scripts/validate_state.py /absolute/path/to/project_state.yaml --action issue_invoice
+python3 /absolute/path/to/agentic-services-orchestrator-skill/scripts/validate_state.py /absolute/path/to/project_state.yaml --action request_payment
+```
+
+Use `issue_invoice` before issuance and `request_payment` before a payment request; check both when both actions are intended. Replace both paths with the installed orchestrator and actual state file; this invoice skill does not include `scripts/validate_state.py`. Require a zero exit status and resolve every reported violation before proceeding. Before sending externally, also verify recipient/send approval and run the orchestrator check with `--action external_send`.
+
+These are deterministic, read-only checks, not runtime guards. They do not issue invoices, request or collect payment, send messages, or grant action authority; those actions remain outside this local drafting skill. Verify the actual billing facts, document version, recipients, and current authorization separately. Without the orchestrator, local drafting remains available, but missing tooling or approval is not permission to issue, send, or request payment.
+
 ## Invoice Selection Guide
 
 Choose by the actual commercial trigger first.
